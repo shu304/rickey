@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template_string, session
+from flask import Flask, request, redirect, render_template_string, session
 import sqlite3
 import os
 
@@ -69,147 +69,177 @@ def index():
     return render_template_string("""
     <html>
     <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
     body { background:#0b3d2e; color:white; font-family:sans-serif; }
-    .card { background:#145a32; padding:20px; margin:20px; border-radius:10px; }
-    h2 { color:#f1c40f; }
+    .card { background:#145a32; padding:20px; margin:15px; border-radius:10px; }
+    button { width:90%; padding:12px; margin:20px; background:gold; border:none; border-radius:10px;}
     </style>
     </head>
     <body>
-    <h1>♠ ポーカーアンケート ♥</h1>
+
+    <h1>♠ ポーカーアンケート ♥ <span onclick="location.href='/login'" style="cursor:pointer;">🂡</span></h1>
+
     <form method="POST">
 
-    <div class="card">
-    Q1 年齢<br>
+    <div class="card">Q1 年齢
     <select name="age">
-        <option>18〜20</option><option>21〜25</option>
-        <option>26〜30</option><option>31以上</option>
-    </select>
-    </div>
+    <option>18〜20</option><option>21〜25</option>
+    <option>26〜30</option><option>31以上</option>
+    </select></div>
 
-    <div class="card">
-    Q2 性別<br>
+    <div class="card">Q2 性別
     <select name="gender">
-        <option>男性</option><option>女性</option>
-        <option>その他</option><option>回答しない</option>
-    </select>
-    </div>
+    <option>男性</option><option>女性</option>
+    <option>その他</option><option>回答しない</option>
+    </select></div>
 
-    <div class="card">
-    Q3 ポーカー歴<br>
+    <div class="card">Q3 ポーカー歴
     <select name="experience">
-        <option>半年未満</option><option>1年未満</option>
-        <option>1〜3年</option><option>3年以上</option>
-    </select>
-    </div>
+    <option>半年未満</option><option>1年未満</option>
+    <option>1〜3年</option><option>3年以上</option>
+    </select></div>
 
-    <div class="card">
-    Q4 月の来店頻度<br>
+    <div class="card">Q4 来店頻度
     <select name="frequency">
-        <option>月1回未満</option><option>月1〜3回</option>
-        <option>週1程度</option><option>週2以上</option>
-    </select>
-    </div>
+    <option>月1回未満</option><option>月1〜3回</option>
+    <option>週1程度</option><option>週2以上</option>
+    </select></div>
 
-    <div class="card">
-    Q5 ポーカーの印象<br>
+    <div class="card">Q5 印象
     <select name="perception">
-        <option>ギャンブル</option>
-        <option>スポーツ・競技</option>
-        <option>頭脳ゲーム</option>
-        <option>娯楽</option>
-        <option>その他</option>
-    </select><br>
-    その他: <input name="perception_other">
+    <option>ギャンブル</option>
+    <option>スポーツ・競技</option>
+    <option>頭脳ゲーム</option>
+    <option>娯楽</option>
+    <option>その他</option>
+    </select>
+    <input name="perception_other" placeholder="その他入力">
     </div>
 
-    <div class="card">
-    Q6 海外経験<br>
+    <div class="card">Q6 海外経験
     <select name="abroad">
-        <option>ある</option><option>ない</option>
-    </select>
-    </div>
+    <option>ある</option><option>ない</option>
+    </select></div>
 
-    <div class="card">
-    Q7 IR利用意向<br>
+    <div class="card">Q7 IR利用
     <select name="ir_use">
-        <option>非常に利用したい</option>
-        <option>利用したい</option>
-        <option>どちらともいえない</option>
-        <option>あまり利用したくない</option>
-        <option>利用したくない</option>
-    </select>
-    </div>
+    <option>非常に利用したい</option>
+    <option>利用したい</option>
+    <option>どちらともいえない</option>
+    <option>あまり利用したくない</option>
+    <option>利用したくない</option>
+    </select></div>
 
-    <div class="card">
-    Q8 IR導入賛成<br>
+    <div class="card">Q8 賛成
     <select name="ir_support">
-        <option>強くそう思う</option>
-        <option>そう思う</option>
-        <option>どちらともいえない</option>
-        <option>そう思わない</option>
-        <option>全くそう思わない</option>
-    </select>
+    <option>強くそう思う</option>
+    <option>そう思う</option>
+    <option>どちらともいえない</option>
+    <option>そう思わない</option>
+    <option>全くそう思わない</option>
+    </select></div>
+
+    <div class="card">Q9 参加
+    <select name="participate" id="q9" onchange="toggleQ10()">
+    <option>はい</option><option>いいえ</option><option>わからない</option>
+    </select></div>
+
+    <div class="card" id="q10">
+    Q10 理由<br>
+    <input type="checkbox" name="reasons" value="人口増加">人口増加<br>
+    <input type="checkbox" name="reasons" value="観光">観光<br>
+    <input type="checkbox" name="reasons" value="大会">大会<br>
+    <input type="checkbox" name="reasons" value="育成">育成<br>
+    <input type="checkbox" name="reasons" value="エンタメ">エンタメ
     </div>
 
-    <div class="card">
-    Q9 参加したい？<br>
-    <select name="participate">
-        <option>はい</option><option>いいえ</option><option>わからない</option>
-    </select>
-    </div>
-
-    <div class="card">
-    Q10 理由（複数）<br>
-    <input type="checkbox" name="reasons" value="ポーカー人口増加">人口増加<br>
-    <input type="checkbox" name="reasons" value="観光資源になる">観光<br>
-    <input type="checkbox" name="reasons" value="国際大会開催">大会<br>
-    <input type="checkbox" name="reasons" value="日本人選手育成">育成<br>
-    <input type="checkbox" name="reasons" value="エンタメ向上">エンタメ<br>
-    <input type="checkbox" name="reasons" value="その他">その他
-    </div>
-
-    <div class="card">
-    Q11 自由記述<br>
+    <div class="card">Q11
     <textarea name="comment"></textarea>
     </div>
 
-    <button type="submit">送信</button>
+    <button>送信</button>
+
     </form>
+
+    <script>
+    function toggleQ10(){
+        const val = document.getElementById("q9").value;
+        document.getElementById("q10").style.display =
+            (val === "いいえ") ? "none" : "block";
+    }
+    </script>
+
     </body>
     </html>
     """)
 
-# 🔐 管理画面ログイン
-@app.route("/login", methods=["GET", "POST"])
+# 🔐 ログイン
+@app.route("/login", methods=["GET","POST"])
 def login():
     if request.method == "POST":
         if request.form["password"] == "20021006":
             session["login"] = True
             return redirect("/admin")
-        else:
-            return "パスワード違う"
+        return "パスワード違う"
 
     return """
     <form method="POST">
-    パスワード: <input type="password" name="password">
+    パスワード<input type="password" name="password">
     <button>ログイン</button>
     </form>
     """
 
-# 📊 管理画面
-@app.route("/admin")
+# 📊 管理画面（削除付き）
+@app.route("/admin", methods=["GET","POST"])
 def admin():
     if not session.get("login"):
         return redirect("/login")
 
     conn = sqlite3.connect(DB)
     c = conn.cursor()
+
+    # 削除処理
+    if request.method == "POST":
+        ids = request.form.getlist("delete_ids")
+        for i in ids:
+            c.execute("DELETE FROM answers WHERE id=?", (i,))
+        conn.commit()
+
     rows = c.execute("SELECT * FROM answers").fetchall()
     conn.close()
 
-    return f"<h2>回答一覧 {len(rows)}件</h2>" + "<br>".join([str(r) for r in rows])
+    html = """
+    <h1>📊 管理画面</h1>
+    <form method="POST">
+    <table border="1" style="border-collapse:collapse;width:100%">
+    <tr style="background:#333;color:white;">
+    <th>削除</th><th>ID</th><th>年齢</th><th>性別</th>
+    <th>経験</th><th>頻度</th><th>参加</th><th>理由</th>
+    </tr>
+    """
 
+    for r in rows:
+        html += f"""
+        <tr>
+        <td><input type="checkbox" name="delete_ids" value="{r[0]}"></td>
+        <td>{r[0]}</td>
+        <td>{r[1]}</td>
+        <td>{r[2]}</td>
+        <td>{r[3]}</td>
+        <td>{r[4]}</td>
+        <td>{r[10]}</td>
+        <td>{r[11]}</td>
+        </tr>
+        """
+
+    html += """
+    </table>
+    <button type="submit">選択したデータを削除</button>
+    </form>
+    """
+
+    return html
 
 # Render用
 if __name__ == "__main__":
