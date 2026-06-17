@@ -72,7 +72,22 @@ def index():
     .card { background:#145a32; padding:15px; margin:10px; border-radius:10px;}
     input,select,textarea { width:90%; padding:10px; margin-top:10px;}
     button { width:90%; padding:15px; margin:20px; background:gold;}
-    .checkbox-group label { display:flex; gap:10px; white-space:nowrap;}
+    .checkbox-group {
+    text-align:left;
+    line-height:2;
+    font-size:14px;
+}
+
+.checkbox-group label {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    white-space:nowrap;   /* ← 改行させない */
+}
+
+.checkbox-group input {
+    transform: scale(1.2); /* ← 押しやすくする */
+}
     </style>
     </head>
     <body>
