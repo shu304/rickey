@@ -8,13 +8,14 @@ app.secret_key = "secret"
 
 DB = "survey.db"
 
-# DB初期化
+# DB
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
     c.execute("""
     CREATE TABLE IF NOT EXISTS answers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
         age TEXT,
         gender TEXT,
         experience TEXT,
@@ -39,6 +40,7 @@ init_db()
 def index():
     if request.method == "POST":
         data = (
+            request.form.get("name"),
             request.form.get("age"),
             request.form.get("gender"),
             request.form.get("experience"),
@@ -55,27 +57,27 @@ def index():
 
         conn = sqlite3.connect(DB)
         c = conn.cursor()
-        c.execute("INSERT INTO answers VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?)", data)
+        c.execute("INSERT INTO answers VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,?)", data)
         conn.commit()
         conn.close()
 
-        return "<h2>回答ありがとうございました！</h2>"
+        return "<h2>回答ありがとうございました！</h2><a href='/'>戻る</a>"
 
     return render_template_string("""
     <html>
     <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-    body { background:#0b3d2e; color:white; font-family:sans-serif; text-align:center;}
+    body { background:#0b3d2e; color:white; text-align:center; font-family:sans-serif;}
     .card { background:#145a32; padding:15px; margin:10px; border-radius:10px;}
-    select, textarea, input { width:90%; padding:12px; margin-top:10px; font-size:16px; border-radius:8px;}
-    button { width:90%; padding:15px; margin:20px; background:gold; border:none; border-radius:10px; font-size:18px;}
-    .checkbox-group { text-align:left; line-height:2; font-size:15px;}
+    input,select,textarea { width:90%; padding:10px; margin-top:10px;}
+    button { width:90%; padding:15px; margin:20px; background:gold;}
+    .checkbox-group label { display:flex; gap:10px; white-space:nowrap;}
     </style>
     </head>
     <body>
 
-    <h2>♠ ポーカーアンケート ♥ <span onclick="location.href='/login'">🂡</span></h2>
+    <h2>ポーカーアンケート <span onclick="location.href='/login'">🂡</span></h2>
 
     <form method="POST">
 
@@ -84,8 +86,7 @@ def index():
     </select></div>
 
     <div class="card">Q2 性別<select name="gender">
-    <option>男性</option><option>女性</option><option>その他</option><option>回答しない</option>
-    </select></div>
+    <option>男性</option><option>女性</option><option>その他</option></select></div>
 
     <div class="card">Q3 ポーカー経験<select name="experience">
     <option>半年未満</option><option>1年未満</option><option>1〜3年</option><option>3年以上</option>
@@ -96,7 +97,7 @@ def index():
     </select></div>
 
     <div class="card">Q5 ポーカーへの印象<select name="perception">
-    <option>ギャンブル</option><option>スポーツ</option><option>頭脳ゲーム</option><option>娯楽</option><option>その他</option>
+    <option>ギャンブル</option><option>スポーツ</option><option>頭脳ゲーム</option><option>娯楽</option>
     </select>
     <input name="perception_other" placeholder="その他"></div>
 
@@ -104,26 +105,22 @@ def index():
     <option>ある</option><option>ない</option></select></div>
 
     <div class="card">Q7 IRカジノが開業したら<select name="ir_use">
-    <option>非常に利用したい</option><option>利用したい</option>
-    <option>どちらとも思わない</option><option>したくない</option>
-    </select></div>
+    <option>したい</option><option>普通</option><option>したくない</option></select></div>
 
     <div class="card">Q8 IRにポーカーを導入するべきか<select name="ir_support">
-    <option>強く賛成</option><option>賛成</option><option>普通</option><option>反対</option>
-    </select></div>
+    <option>賛成</option><option>普通</option><option>反対</option></select></div>
 
-    <div class="card">Q9 もし導入されたら参加したいですか<select name="participate" id="q9" onchange="toggleQ10()">
-    <option>はい</option><option>いいえ</option><option>わからない</option>
-    </select></div>
+    <div class="card">Q9 もし導入されたら参加したいですか<select name="participate">
+    <option>はい</option><option>いいえ</option></select></div>
 
     <div class="card" id="q10">
     Q10 導入してほしい理由
     <div class="checkbox-group">
-    <label><input type="checkbox" name="reasons" value="ポーカー人口増加"> ポーカー人口増加</label><br>
-    <label><input type="checkbox" name="reasons" value="観光資源になる"> 観光資源になる</label><br>
-    <label><input type="checkbox" name="reasons" value="国際大会開催"> 国際大会開催</label><br>
-    <label><input type="checkbox" name="reasons" value="日本人選手育成"> 日本人選手育成</label><br>
-    <label><input type="checkbox" name="reasons" value="エンタメ向上"> エンタメ向上</label>
+    <label><input type="checkbox" name="reasons" value="ポーカー人口増加">ポーカー人口増加</label>
+    <label><input type="checkbox" name="reasons" value="観光資源になる">観光資源になる</label>
+    <label><input type="checkbox" name="reasons" value="国際大会開催">国際大会開催</label>
+    <label><input type="checkbox" name="reasons" value="日本人選手育成">日本人選手育成</label>
+    <label><input type="checkbox" name="reasons" value="エンタメ向上">エンタメ向上</label>
     </div>
     </div>
 
@@ -132,14 +129,6 @@ def index():
     <button>送信</button>
 
     </form>
-
-    <script>
-    function toggleQ10(){
-        let v = document.getElementById("q9").value;
-        document.getElementById("q10").style.display = (v === "いいえ") ? "none" : "block";
-    }
-    </script>
-
     </body>
     </html>
     """)
@@ -154,17 +143,16 @@ def login():
         return "NG"
 
     return """
-    <body style="background:#0b3d2e;font-family:sans-serif;">
-    <div style="max-width:400px;margin:100px auto;background:white;padding:30px;border-radius:15px;text-align:center;">
-    <h2>管理ログイン</h2>
+    <div style="text-align:center;margin-top:100px;">
+    <h2>ログイン</h2>
     <form method="POST">
-    <input type="password" name="password" placeholder="パスワード"
-    style="width:100%;padding:15px;font-size:18px;border-radius:10px;border:1px solid #ccc;">
+    <input type="password" name="password">
     <br><br>
-    <button style="width:100%;padding:15px;background:#145a32;color:white;border:none;border-radius:10px;">ログイン</button>
+    <button>ログイン</button>
     </form>
+    <br>
+    <a href="/">← 解答画面に戻る</a>
     </div>
-    </body>
     """
 
 # 📊 管理画面
@@ -178,101 +166,54 @@ def admin():
     rows = c.execute("SELECT * FROM answers").fetchall()
     conn.close()
 
-    data_json = json.dumps(rows)
-
     return render_template_string(f"""
-    <html>
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
-
-    <body style="font-family:sans-serif;text-align:center;">
-
     <h2>管理画面</h2>
+    <a href="/">← 解答画面に戻る</a>
 
-    <button onclick="toggle(1)">年齢</button>
-    <button onclick="toggle(2)">性別</button>
-    <button onclick="toggle(3)">経験</button>
-    <button onclick="toggle(4)">頻度</button>
-    <button onclick="toggle(10)">参加</button>
-    <button onclick="toggle(11)">理由</button>
-
-    <canvas id="chart"></canvas>
-
-    <h3>回答一覧</h3>
-    <table border="1" style="width:100%;font-size:12px;">
+    <table border=1 style="width:100%;font-size:12px;">
     <tr>
-    <th>ID</th><th>年齢</th><th>性別</th><th>経験</th><th>頻度</th><th>参加</th><th>削除</th>
+    <th>ID</th><th>年齢</th><th>性別</th><th>コメント</th>
     </tr>
+
     {''.join([f"""
     <tr>
     <td>{r[0]}</td>
     <td>{r[1]}</td>
-    <td>{r[2]}</td>
+    <td><a href='/user/{r[0]}'>{r[2]}</a></td>
     <td>{r[3]}</td>
-    <td>{r[4]}</td>
-    <td>{r[10]}</td>
-    <td><button onclick="deleteOne({r[0]})" style="background:red;color:white;">削除</button></td>
+    <td>{r[13]}</td>
     </tr>
     """ for r in rows])}
     </table>
-
-    <script>
-    const data = {data_json};
-    let current = null;
-    let chart = null;
-
-    function toggle(index){{
-        if(current === index){{
-            if(chart) chart.destroy();
-            current = null;
-            return;
-        }}
-
-        current = index;
-        if(chart) chart.destroy();
-
-        const count = {{}};
-
-        data.forEach(d => {{
-            let val = d[index];
-            if(index == 11){{
-                if(val) val.split(',').forEach(v => count[v]=(count[v]||0)+1);
-            }} else {{
-                count[val] = (count[val]||0)+1;
-            }}
-        }});
-
-        chart = new Chart(document.getElementById('chart'), {{
-            type:'pie',
-            data:{{
-                labels:Object.keys(count),
-                datasets:[{{data:Object.values(count)}}]
-            }}
-        }});
-    }}
-
-    function deleteOne(id){{
-        if(confirm("このデータ削除する？")){{
-            fetch('/delete/' + id).then(()=>location.reload());
-        }}
-    }}
-    </script>
-
-    </body>
-    </html>
     """)
 
-# 🗑️ 個別削除
-@app.route("/delete/<int:id>")
-def delete(id):
+# 👤 個別詳細
+@app.route("/user/<int:id>")
+def user(id):
+    if not session.get("login"):
+        return redirect("/login")
+
     conn = sqlite3.connect(DB)
     c = conn.cursor()
-    c.execute("DELETE FROM answers WHERE id=?", (id,))
-    conn.commit()
+    r = c.execute("SELECT * FROM answers WHERE id=?", (id,)).fetchone()
     conn.close()
-    return "OK"
+
+    return f"""
+    <p>年齢: {r[2]}</p>
+    <p>性別: {r[3]}</p>
+    <p>経験: {r[4]}</p>
+    <p>頻度: {r[5]}</p>
+    <p>印象: {r[6]}</p>
+    <p>海外: {r[8]}</p>
+    <p>IR利用: {r[9]}</p>
+    <p>IR賛成: {r[10]}</p>
+    <p>参加: {r[11]}</p>
+    <p>理由: {r[12]}</p>
+    <p>コメント: {r[13]}</p>
+
+    <br>
+    <a href="/admin">← 一覧に戻る</a>
+    """
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
