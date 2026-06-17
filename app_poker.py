@@ -1,13 +1,13 @@
 from flask import Flask, request, redirect, render_template_string, session
 import sqlite3
 import os
+from collections import Counter
 
 app = Flask(__name__)
 app.secret_key = "secret"
 
 DB = "survey.db"
 
-# DB初期化
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -34,9 +34,6 @@ def init_db():
 
 init_db()
 
-# ======================
-# 📝 アンケート画面
-# ======================
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -212,21 +209,45 @@ def login():
         return "NG"
 
     return """
-    <div style="text-align:center;margin-top:100px;">
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+    body {
+        background:#0b3d2e;
+        color:white;
+        text-align:center;
+        font-family:sans-serif;
+    }
+    input,button {
+        width:80%;
+        padding:15px;
+        margin-top:15px;
+        font-size:16px;
+    }
+    button {
+        background:gold;
+    }
+    </style>
+    </head>
+    <body>
+
     <h2>ログイン</h2>
+
     <form method="POST">
-    <input type="password" name="password">
-    <br><br>
+    <input type="password" name="password" placeholder="パスワード">
+    <br>
     <button>ログイン</button>
     </form>
+
     <br>
-    <a href="/">← 解答画面に戻る</a>
-    </div>
+    <a href="/" style="color:white;">← 解答画面に戻る</a>
+
+    </body>
+    </html>
     """
 
-# ======================
-# 📊 管理画面
-# ======================
+
 @app.route("/admin")
 def admin():
     if not session.get("login"):
@@ -239,7 +260,10 @@ def admin():
 
     return render_template_string(f"""
     <h2>管理画面</h2>
+
     <a href="/">← 解答画面に戻る</a>
+    <br><br>
+    <a href="/charts">📊 円グラフを見る</a>
 
     <table border=1 style="width:100%;font-size:12px;">
     <tr>
@@ -249,8 +273,8 @@ def admin():
     {''.join([f"""
     <tr>
     <td>{r[0]}</td>
-    <td><a href='/user/{r[0]}'>{r[1]}</a></td>
-    <td>{r[2]}</td>
+    <td>{r[1]}</td>
+    <td><a href='/user/{r[0]}'>{r[2]}</a></td>
     <td>{r[3]}</td>
     <td>{r[13]}</td>
     </tr>
@@ -258,9 +282,91 @@ def admin():
     </table>
     """)
 
+
 # ======================
-# 👤 個別表示
+# 📊 円グラフ（11項目）
 # ======================
+@app.route("/charts")
+def charts():
+    if not session.get("login"):
+        return redirect("/login")
+
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    rows = c.execute("SELECT * FROM answers").fetchall()
+    conn.close()
+
+    def make_chart(data, title):
+        count = Counter(data)
+        total = sum(count.values())
+
+        labels = list(count.keys())
+        values = list(count.values())
+
+        return f"""
+        <h3>{title}</h3>
+        <p>合計: {total}</p>
+        <ul>
+        {''.join([f"<li>{k}: {v}</li>" for k,v in count.items()])}
+        </ul>
+
+        <canvas id="{title}"></canvas>
+
+        <script>
+        new Chart(document.getElementById("{title}"), {{
+            type: 'pie',
+            data: {{
+                labels: {labels},
+                datasets: [{{
+                    data: {values}
+                }}]
+            }}
+        }});
+        </script>
+        """
+
+    age = [r[2] for r in rows]
+    gender = [r[3] for r in rows]
+    exp = [r[4] for r in rows]
+    freq = [r[5] for r in rows]
+    perception = [r[6] for r in rows]
+    abroad = [r[8] for r in rows]
+    ir_use = [r[9] for r in rows]
+    ir_support = [r[10] for r in rows]
+    participate = [r[11] for r in rows]
+
+    # 理由（分解）
+    reasons_list = []
+    for r in rows:
+        if r[12]:
+            reasons_list += r[12].split(",")
+
+    comments = ["あり" if r[13] else "なし" for r in rows]
+
+    return f"""
+    <html>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <h2>円グラフ分析（全11項目）</h2>
+
+    {make_chart(age,"年齢")}
+    {make_chart(gender,"性別")}
+    {make_chart(exp,"経験")}
+    {make_chart(freq,"頻度")}
+    {make_chart(perception,"印象")}
+    {make_chart(abroad,"海外経験")}
+    {make_chart(ir_use,"IR利用")}
+    {make_chart(ir_support,"IR賛否")}
+    {make_chart(participate,"参加")}
+    {make_chart(reasons_list,"理由")}
+    {make_chart(comments,"コメント有無")}
+
+    <br><br>
+    <a href="/admin">← 一覧に戻る</a>
+    </html>
+    """
+
+
 @app.route("/user/<int:id>")
 def user(id):
     if not session.get("login"):
@@ -272,26 +378,17 @@ def user(id):
     conn.close()
 
     return f"""
-    <h2>{r[1]} の回答</h2>
+    <h2>詳細</h2>
     <p>年齢: {r[2]}</p>
     <p>性別: {r[3]}</p>
     <p>経験: {r[4]}</p>
     <p>頻度: {r[5]}</p>
-    <p>印象: {r[6]}</p>
-    <p>海外: {r[8]}</p>
-    <p>IR利用: {r[9]}</p>
-    <p>IR賛成: {r[10]}</p>
-    <p>参加: {r[11]}</p>
-    <p>理由: {r[12]}</p>
     <p>コメント: {r[13]}</p>
 
-    <br>
-    <a href="/admin">← 一覧に戻る</a>
+    <a href="/admin">← 戻る</a>
     """
 
-# ======================
-# 起動
-# ======================
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
