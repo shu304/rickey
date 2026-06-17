@@ -8,7 +8,7 @@ app.secret_key = "secret"
 
 DB = "survey.db"
 
-# DB
+# DB初期化
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -55,9 +55,7 @@ def index():
 
         conn = sqlite3.connect(DB)
         c = conn.cursor()
-        c.execute("""
-        INSERT INTO answers VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, data)
+        c.execute("INSERT INTO answers VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?)", data)
         conn.commit()
         conn.close()
 
@@ -70,8 +68,9 @@ def index():
     <style>
     body { background:#0b3d2e; color:white; font-family:sans-serif; text-align:center;}
     .card { background:#145a32; padding:15px; margin:10px; border-radius:10px;}
-    select, textarea, input { width:90%; padding:10px; margin-top:10px; font-size:16px;}
+    select, textarea, input { width:90%; padding:12px; margin-top:10px; font-size:16px; border-radius:8px;}
     button { width:90%; padding:15px; margin:20px; background:gold; border:none; border-radius:10px; font-size:18px;}
+    .checkbox-group { text-align:left; line-height:2; font-size:15px;}
     </style>
     </head>
     <body>
@@ -118,15 +117,17 @@ def index():
     </select></div>
 
     <div class="card" id="q10">
-    Q10 導入してほしい理由<br>
-    <input type="checkbox" name="reasons" value="ポーカー人口増加">ポーカー人口増加<br>
-    <input type="checkbox" name="reasons" value="観光資源になる">観光資源になる<br>
-    <input type="checkbox" name="reasons" value="国際大会開催">国際大会開催<br>
-    <input type="checkbox" name="reasons" value="日本人選手育成">日本人選手育成<br>
-    <input type="checkbox" name="reasons" value="エンタメ向上">エンタメ向上
+    Q10 導入してほしい理由
+    <div class="checkbox-group">
+    <label><input type="checkbox" name="reasons" value="ポーカー人口増加"> ポーカー人口増加</label><br>
+    <label><input type="checkbox" name="reasons" value="観光資源になる"> 観光資源になる</label><br>
+    <label><input type="checkbox" name="reasons" value="国際大会開催"> 国際大会開催</label><br>
+    <label><input type="checkbox" name="reasons" value="日本人選手育成"> 日本人選手育成</label><br>
+    <label><input type="checkbox" name="reasons" value="エンタメ向上"> エンタメ向上</label>
+    </div>
     </div>
 
-    <div class="card">Q11 IRにおけるポーカー導入について意見などがあればご記入ください<textarea name="comment"></textarea></div>
+    <div class="card">Q11 コメント<textarea name="comment"></textarea></div>
 
     <button>送信</button>
 
@@ -153,17 +154,20 @@ def login():
         return "NG"
 
     return """
-    <div style="text-align:center;margin-top:100px;">
-    <h2>ログイン</h2>
+    <body style="background:#0b3d2e;font-family:sans-serif;">
+    <div style="max-width:400px;margin:100px auto;background:white;padding:30px;border-radius:15px;text-align:center;">
+    <h2>管理ログイン</h2>
     <form method="POST">
-    <input type="password" name="password" style="padding:15px;font-size:18px;width:80%;">
+    <input type="password" name="password" placeholder="パスワード"
+    style="width:100%;padding:15px;font-size:18px;border-radius:10px;border:1px solid #ccc;">
     <br><br>
-    <button style="padding:15px;width:80%;">ログイン</button>
+    <button style="width:100%;padding:15px;background:#145a32;color:white;border:none;border-radius:10px;">ログイン</button>
     </form>
     </div>
+    </body>
     """
 
-# 📊 管理画面（円グラフ付き）
+# 📊 管理画面
 @app.route("/admin")
 def admin():
     if not session.get("login"):
@@ -187,33 +191,60 @@ def admin():
 
     <h2>管理画面</h2>
 
-    <button onclick="draw(1)">年齢</button>
-    <button onclick="draw(2)">性別</button>
-    <button onclick="draw(3)">経験</button>
-    <button onclick="draw(4)">頻度</button>
-    <button onclick="draw(10)">参加</button>
-    <button onclick="draw(11)">理由</button>
+    <button onclick="toggle(1)">年齢</button>
+    <button onclick="toggle(2)">性別</button>
+    <button onclick="toggle(3)">経験</button>
+    <button onclick="toggle(4)">頻度</button>
+    <button onclick="toggle(10)">参加</button>
+    <button onclick="toggle(11)">理由</button>
 
     <canvas id="chart"></canvas>
 
+    <h3>回答一覧</h3>
+    <table border="1" style="width:100%;font-size:12px;">
+    <tr>
+    <th>ID</th><th>年齢</th><th>性別</th><th>経験</th><th>頻度</th><th>参加</th><th>削除</th>
+    </tr>
+    {''.join([f"""
+    <tr>
+    <td>{r[0]}</td>
+    <td>{r[1]}</td>
+    <td>{r[2]}</td>
+    <td>{r[3]}</td>
+    <td>{r[4]}</td>
+    <td>{r[10]}</td>
+    <td><button onclick="deleteOne({r[0]})" style="background:red;color:white;">削除</button></td>
+    </tr>
+    """ for r in rows])}
+    </table>
+
     <script>
     const data = {data_json};
+    let current = null;
+    let chart = null;
 
-    function draw(index){{
+    function toggle(index){{
+        if(current === index){{
+            if(chart) chart.destroy();
+            current = null;
+            return;
+        }}
+
+        current = index;
+        if(chart) chart.destroy();
+
         const count = {{}};
 
         data.forEach(d => {{
             let val = d[index];
-            if(index == 11) {{
-                val.split(',').forEach(v => {{
-                    count[v] = (count[v]||0)+1;
-                }});
+            if(index == 11){{
+                if(val) val.split(',').forEach(v => count[v]=(count[v]||0)+1);
             }} else {{
                 count[val] = (count[val]||0)+1;
             }}
         }});
 
-        new Chart(document.getElementById('chart'), {{
+        chart = new Chart(document.getElementById('chart'), {{
             type:'pie',
             data:{{
                 labels:Object.keys(count),
@@ -221,11 +252,27 @@ def admin():
             }}
         }});
     }}
+
+    function deleteOne(id){{
+        if(confirm("このデータ削除する？")){{
+            fetch('/delete/' + id).then(()=>location.reload());
+        }}
+    }}
     </script>
 
     </body>
     </html>
     """)
+
+# 🗑️ 個別削除
+@app.route("/delete/<int:id>")
+def delete(id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("DELETE FROM answers WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    return "OK"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
