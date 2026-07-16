@@ -1,6 +1,11 @@
 from flask import Flask, request, redirect, render_template_string, session
 import psycopg2
 import os
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_conn():
+    return psycopg2.connect(DATABASE_URL, sslmode='require')
 from collections import Counter
 
 app = Flask(__name__)
