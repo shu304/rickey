@@ -487,3 +487,53 @@ def user(id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+# ======================
+# React 用 API
+# ======================
+
+from flask import jsonify
+
+@app.route("/api/answers", methods=["GET"])
+def api_get_answers():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT * FROM answers")
+    rows = c.fetchall()
+    conn.close()
+    return jsonify(rows)
+
+@app.route("/api/answers", methods=["POST"])
+def api_post_answers():
+    data = request.json  # ← React の JSON を受け取る
+
+    payload = (
+        data.get("name"),
+        data.get("age"),
+        data.get("gender"),
+        data.get("experience"),
+        data.get("frequency"),
+        data.get("perception"),
+        data.get("perception_other"),
+        data.get("abroad"),
+        data.get("ir_use"),
+        data.get("ir_support"),
+        data.get("participate"),
+        data.get("reasons"),
+        data.get("comment")
+    )
+
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO answers (
+            name, age, gender, experience, frequency,
+            perception, perception_other, abroad,
+            ir_use, ir_support, participate, reasons, comment
+        )
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    """, payload)
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "ok"})
