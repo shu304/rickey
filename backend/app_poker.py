@@ -41,34 +41,31 @@ app.secret_key = "secret"
 # DB初期化
 # ======================
 def init_db():
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute("SELECT 1;")
-    print(cur.fetchone())
-    conn.close()
-    c = conn.cursor()
+    try:
+        conn = get_conn()
+        if conn.closed:
+            print("Connection was closed before use.")
+            return
 
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS answers (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        age TEXT,
-        gender TEXT,
-        experience TEXT,
-        frequency TEXT,
-        perception TEXT,
-        perception_other TEXT,
-        abroad TEXT,
-        ir_use TEXT,
-        ir_support TEXT,
-        participate TEXT,
-        reasons TEXT,
-        comment TEXT
-    )
-    """)
+        with conn:
+            with conn.cursor() as c:
+                c.execute("""
+                CREATE TABLE IF NOT EXISTS answers (
+                    id SERIAL PRIMARY KEY,
+                    q1 TEXT,
+                    q2 TEXT,
+                    q3 TEXT,
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+                """)
+                print("Database initialized successfully")
 
-    conn.commit()
-    conn.close()
+    except Exception as e:
+        print("Database initialization failed:", e)
+    finally:
+        if conn and not conn.closed:
+            conn.close()
+
 
 init_db()
 
