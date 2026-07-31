@@ -6,11 +6,8 @@ import socket
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_conn():
-    # IPv4アドレスを強制的に使う
-    host = "db.ncgpjxxrdccsbhwbscjq.supabase.co"
-    ipv4 = socket.gethostbyname(host)
-    dsn = DATABASE_URL.replace(host, ipv4)
-    return psycopg2.connect(dsn, sslmode='require')
+    return psycopg2.connect(DATABASE_URL, sslmode='require')
+
 
 from collections import Counter
 
