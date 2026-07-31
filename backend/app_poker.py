@@ -7,6 +7,28 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 def get_conn():
     return psycopg2.connect(DATABASE_URL, sslmode='require')
 
+def init_db():
+    conn = get_conn()
+    try:
+        c = conn.cursor()
+        # ここでテーブル作成などを実行
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS answers (
+            id SERIAL PRIMARY KEY,
+            q1 TEXT,
+            q2 TEXT,
+            q3 TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        """)
+        conn.commit()
+        print("Database initialized successfully")
+    except Exception as e:
+        print("Database initialization failed:", e)
+    finally:
+        c.close()
+        conn.close()
+
 
 from collections import Counter
 
@@ -481,16 +503,6 @@ def user(id):
     <a href="/admin">戻る</a>
     """
 
-# ======================
-# 起動
-# ======================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-# ======================
-# React 用 API
-# ======================
-
 from flask import jsonify
 
 @app.route("/api/answers", methods=["GET"])
@@ -537,3 +549,13 @@ def api_post_answers():
     conn.close()
 
     return jsonify({"status": "ok"})
+
+# ======================
+# 起動
+# ======================
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+# ======================
+# React 用 API
+# ======================
