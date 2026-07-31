@@ -1,7 +1,6 @@
 from flask import Flask, request, redirect, render_template_string, session
 import psycopg2
 import os
-import socket
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -13,8 +12,6 @@ from collections import Counter
 
 app = Flask(__name__)
 app.secret_key = "secret"
-
-DATABASE_URL ="postgresql://postgres:tyaro.0611.2214@db.ncgpjxxrdccsbhwbscjq.supabase.co:5432/postgres"
 
 # ======================
 # DB接続
