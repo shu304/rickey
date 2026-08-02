@@ -1,6 +1,11 @@
 from flask import Flask, request, redirect, render_template_string, session
 import psycopg2
 import os
+import socket
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)
+
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
