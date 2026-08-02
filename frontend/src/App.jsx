@@ -56,6 +56,7 @@ function App() {
       body: JSON.stringify(payload)
     });
 
+    // 再取得して一覧更新
     const res = await fetch(URL);
     const data = await res.json();
     setAnswers(data);
@@ -82,9 +83,8 @@ function App() {
         </span>
       </h2>
 
-
+      {/* アンケートフォーム */}
       <form onSubmit={handleSubmit}>
-
 
         {/* 年齢 */}
         <div className="card">
@@ -186,13 +186,13 @@ function App() {
             <option>いいえ</option>
           </select>
         </div>
+
         {/* Q10：賛成のときだけ表示 */}
         {form.ir_support !== "反対" && (
           <div className="card" id="q10">
             導入してほしい理由
 
             <div className="checkbox-group">
-
               {[
                 "ポーカー人口増加",
                 "観光資源になる",
@@ -209,7 +209,6 @@ function App() {
                   <span>{reason}</span>
                 </label>
               ))}
-
             </div>
 
             <br />
@@ -222,6 +221,7 @@ function App() {
             />
           </div>
         )}
+
         {/* コメント */}
         <div className="card">
           自由にコメント
@@ -237,23 +237,26 @@ function App() {
 
       </form>
 
+      {/* 回答一覧 */}
       <h2>回答一覧</h2>
-      <ul>
-        {answers.map(a => (
-          <li key={a[0]}>
-            {a[1]} / {a[2]} / {a[3]} / {a[13]}
-          </li>
+      <div style={{ textAlign: "left", margin: "0 auto", width: "80%" }}>
+        {answers.map((a, i) => (
+          <div key={i} style={{
+            background: "#004d3a",
+            margin: "10px 0",
+            padding: "10px",
+            borderRadius: "8px"
+          }}>
+            <p>年齢: {a[1]}</p>
+            <p>性別: {a[2]}</p>
+            <p>経験: {a[3]}</p>
+            <p>コメント: {a[13]}</p>
+          </div>
         ))}
-      </ul>
+      </div>
 
     </div>
   );
 }
-
-<button
-  onClick={() => window.location.href="https://poker-survey.onrender.com/admin"}
->
-  管理画面へ
-</button>
 
 export default App;
