@@ -551,8 +551,7 @@ def api_post_answers():
 # 起動
 # ======================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=10000)
 # ======================
 # React 用 API
 # ======================
