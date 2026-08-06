@@ -18,28 +18,17 @@ function App() {
     reasons_other: "",
     comment: ""
   });
-  const handleSubmit = async () => {
-    await fetch("http://localhost:3000/api/answers", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
-
-    alert("送信した！");
-  };
 
   const URL = "https://poker-survey.onrender.com/api/answers";
 
-  // 初回表示でデータ取得
+  // 初回データ取得
   useEffect(() => {
-    fetch("http://localhost:3000/api/answers")
+    fetch(URL)
       .then(res => res.json())
       .then(data => setAnswers(data));
   }, []);
 
-  // チェックボックス処理
+  // チェックボックス
   const toggleReason = (value) => {
     setForm(prev => {
       const exists = prev.reasons.includes(value);
@@ -52,7 +41,7 @@ function App() {
     });
   };
 
-  // 送信
+  // ✅ 送信（これだけ残す）
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -63,11 +52,15 @@ function App() {
 
     await fetch(URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(payload)
     });
 
-    // 再取得して一覧更新
+    alert("送信成功！");
+
+    // 再取得
     const res = await fetch(URL);
     const data = await res.json();
     setAnswers(data);
@@ -79,29 +72,14 @@ function App() {
       color: "white",
       minHeight: "100vh",
       padding: "30px",
-      textAlign: "center",
-      fontFamily: "sans-serif",
-      lineHeight: "1.8em"
+      textAlign: "center"
     }}>
-  return (
-  <div><button onClick={handleSubmit}>送信</button></div>
-  )
 
-      <h2>
-        ポーカーアンケート{" "}
-        <span
-          style={{ cursor: "pointer" }}
-          onClick={() => window.location.href = "https://poker-survey.onrender.com/admin"}
-        >
-          🂡
-        </span>
-      </h2>
+      <h2>ポーカーアンケート</h2>
 
-      {/* アンケートフォーム */}
       <form onSubmit={handleSubmit}>
 
-        {/* 年齢 */}
-        <div className="card">
+        <div>
           年齢
           <select value={form.age} onChange={e => setForm({ ...form, age: e.target.value })}>
             <option>18〜20</option>
@@ -111,8 +89,7 @@ function App() {
           </select>
         </div>
 
-        {/* 性別 */}
-        <div className="card">
+        <div>
           性別
           <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
             <option>男性</option>
@@ -121,8 +98,7 @@ function App() {
           </select>
         </div>
 
-        {/* 経験 */}
-        <div className="card">
+        <div>
           経験
           <select value={form.experience} onChange={e => setForm({ ...form, experience: e.target.value })}>
             <option>半年未満</option>
@@ -132,8 +108,7 @@ function App() {
           </select>
         </div>
 
-        {/* 来店頻度 */}
-        <div className="card">
+        <div>
           来店頻度
           <select value={form.frequency} onChange={e => setForm({ ...form, frequency: e.target.value })}>
             <option>月1未満</option>
@@ -143,8 +118,7 @@ function App() {
           </select>
         </div>
 
-        {/* ポーカーの印象 */}
-        <div className="card">
+        <div>
           ポーカーの印象
           <select value={form.perception} onChange={e => setForm({ ...form, perception: e.target.value })}>
             <option>ギャンブル</option>
@@ -152,130 +126,20 @@ function App() {
             <option>頭脳ゲーム</option>
             <option>娯楽</option>
           </select>
-
-          <input
-            placeholder="その他"
-            value={form.perception_other}
-            onChange={e => setForm({ ...form, perception_other: e.target.value })}
-          />
         </div>
 
-        {/* 海外経験 */}
-        <div className="card">
-          海外カジノでのポーカー経験
-          <select value={form.abroad} onChange={e => setForm({ ...form, abroad: e.target.value })}>
-            <option>ある</option>
-            <option>ない</option>
-          </select>
-        </div>
-
-        {/* IR利用 */}
-        <div className="card">
-          IRカジノが起業したら利用
-          <select value={form.ir_use} onChange={e => setForm({ ...form, ir_use: e.target.value })}>
-            <option>したい</option>
-            <option>どちらとも思わない</option>
-            <option>したくない</option>
-          </select>
-        </div>
-
-        {/* IR賛否 */}
-        <div className="card">
-          IRへポーカー導入への賛否（Q8）
-          <select
-            value={form.ir_support}
-            onChange={e => setForm({ ...form, ir_support: e.target.value })}
-          >
-            <option>賛成</option>
-            <option>どちらとも思わない</option>
-            <option>反対</option>
-          </select>
-        </div>
-
-        {/* 参加意向 */}
-        <div className="card">
-          もし導入されたら参加したいか
-          <select value={form.participate} onChange={e => setForm({ ...form, participate: e.target.value })}>
-            <option>はい</option>
-            <option>いいえ</option>
-          </select>
-        </div>
-
-        {/* Q10：賛成のときだけ表示 */}
-        {form.ir_support !== "反対" && (
-          <div className="card" id="q10">
-            導入してほしい理由
-
-            <div className="checkbox-group">
-              {[
-                "ポーカー人口増加",
-                "観光資源になる",
-                "国際大会開催",
-                "日本人選手育成",
-                "エンタメ向上"
-              ].map(reason => (
-                <label key={reason}>
-                  <input
-                    type="checkbox"
-                    checked={form.reasons.includes(reason)}
-                    onChange={() => toggleReason(reason)}
-                  />
-                  <span>{reason}</span>
-                </label>
-              ))}
-            </div>
-
-            <br />
-            その他：
-            <input
-              type="text"
-              placeholder="自由入力"
-              value={form.reasons_other}
-              onChange={e => setForm({ ...form, reasons_other: e.target.value })}
-            />
-          </div>
-        )}
-
-        {/* コメント */}
-        <div className="card">
-          自由にコメント
-          <textarea
-            value={form.comment}
-            onChange={e => setForm({ ...form, comment: e.target.value })}
-          />
-        </div>
-
-        <button style={{ width: "90%", padding: "15px", margin: "20px", background: "gold" }}>
-          送信
-        </button>
+        <button type="submit">送信</button>
 
       </form>
 
-      {/* 回答一覧 */}
       <h2>回答一覧</h2>
-      <div style={{ textAlign: "left", margin: "0 auto", width: "80%" }}>
-        {answers.map((a, i) => (
-          <div key={i} style={{
-            background: "#004d3a",
-            margin: "10px 0",
-            padding: "10px",
-            borderRadius: "8px"
-          }}>
-            <p>年齢: {a[1]}</p>
-            <p>性別: {a[2]}</p>
-            <p>経験: {a[3]}</p>
-            <p>来店頻度: {a[4]}</p>
-            <p>ポーカーの印象: {a[5]}</p>
-            <p>海外経験: {a[6]}</p>
-            <p>IR利用: {a[7]}</p>
-            <p>IR賛否: {a[8]}</p>
-            <p>参加意向: {a[9]}</p>
-            <p>導入理由: {a[10]}</p>
-            <p>その他導入理由: {a[11]}</p>
-            <p>コメント: {a[13]}</p>
-          </div>
-        ))}
-      </div>
+
+      {answers.map((a, i) => (
+        <div key={i}>
+          <p>年齢: {a[1]}</p>
+          <p>性別: {a[2]}</p>
+        </div>
+      ))}
 
     </div>
   );
