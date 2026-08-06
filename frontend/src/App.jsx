@@ -18,12 +18,23 @@ function App() {
     reasons_other: "",
     comment: ""
   });
+  const handleSubmit = async () => {
+    await fetch("http://localhost:3000/api/answers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
+    });
+
+    alert("送信した！");
+  };
 
   const URL = "https://poker-survey.onrender.com/api/answers";
 
   // 初回表示でデータ取得
   useEffect(() => {
-    fetch(URL)
+    fetch("http://localhost:3000/api/answers")
       .then(res => res.json())
       .then(data => setAnswers(data));
   }, []);
@@ -72,6 +83,9 @@ function App() {
       fontFamily: "sans-serif",
       lineHeight: "1.8em"
     }}>
+  return (
+  <div><button onClick={handleSubmit}>送信</button></div>
+  )
 
       <h2>
         ポーカーアンケート{" "}
